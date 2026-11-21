@@ -1,13 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { CourseService } from '../course.service';
 import { CourseResponse } from '../course.models';
+import { AddCourse } from '../add-course/add-course';
 
 @Component({
   selector: 'app-course-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AddCourse],
   templateUrl: './course-list.html',
   styleUrl: './course-list.css',
 })

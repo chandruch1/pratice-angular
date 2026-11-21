@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
 import { roleGuard } from './core/guards/role-guard';
+import { AddCourse } from './features/admin/courses/add-course/add-course';
 
 export const routes: Routes = [
   {
@@ -21,6 +22,10 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () =>
           import('./features/admin/dashboard/dashboard').then((m) => m.Dashboard),
+      },
+      {
+        path : 'add-courses',
+        component : AddCourse
       },
       {
         path: 'students',
