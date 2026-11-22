@@ -1,0 +1,218 @@
+<div class="profile-page">
+  <!-- Header -->
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">MY ACCOUNT</span>
+      <h2>Student Profile</h2>
+      <p>View and manage your academic profile and personal information.</p>
+    </div>
+
+    @if (!isEditing() && profile()) {
+      <button class="btn btn-edit-profile" (click)="startEditing()">
+        ✏️ Edit Profile
+      </button>
+    }
+  </div>
+
+  <!-- Alerts -->
+  @if (successMessage()) {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <span>✓ {{ successMessage() }}</span>
+      <button type="button" class="btn-close" (click)="successMessage.set('')"></button>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span>⚠️ {{ errorMessage() }}</span>
+      <button type="button" class="btn-close" (click)="errorMessage.set('')"></button>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p>Loading your profile...</p>
+    </div>
+  }
+
+  <!-- Profile Content -->
+  @else if (profile()) {
+    <div class="profile-layout">
+      <!-- Profile Summary Card -->
+      <div class="profile-card hero-card">
+        <div class="hero-header">
+          <div class="avatar-large">
+            {{ profile()!.name.charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <h3>{{ profile()!.name }}</h3>
+            <p class="email-sub">{{ profile()!.email }}</p>
+            <span
+              class="status-pill"
+              [class.pending]="profile()!.status === 0"
+              [class.approved]="profile()!.status === 1"
+              [class.rejected]="profile()!.status === 2"
+            >
+              ● {{ getStatusLabel(profile()!.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-box">
+            <span class="stat-label">DEPARTMENT</span>
+            <strong>{{ profile()!.department }}</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">CGPA</span>
+            <strong>{{ profile()!.cgpa | number: '1.2-2' }}</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">AGE</span>
+            <strong>{{ profile()!.age }} yrs</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Form Card -->
+      @if (isEditing()) {
+        <div class="profile-card form-card">
+          <div class="card-heading">
+            <h4>Update Information</h4>
+            <p>Update your name, department, age, or CGPA.</p>
+          </div>
+
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <div class="row g-3">
+              <!-- Name -->
+              <div class="col-md-6">
+                <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="name"
+                  placeholder="Enter full name"
+                />
+                @if (profileForm.controls['name'].touched && profileForm.controls['name'].invalid) {
+                  <small class="text-danger">Name is required (max 120 chars).</small>
+                }
+              </div>
+
+              <!-- Email (Read-Only) -->
+              <div class="col-md-6">
+                <label class="form-label">Email Address</label>
+                <input
+                  type="email"
+                  class="form-control disabled-input"
+                  [value]="profile()!.email"
+                  disabled
+                />
+                <small class="text-muted">Email cannot be modified.</small>
+              </div>
+
+              <!-- Department -->
+              <div class="col-md-6">
+                <label class="form-label">Department <span class="text-danger">*</span></label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="department"
+                  placeholder="e.g. CSE, ECE, IT"
+                />
+                @if (profileForm.controls['department'].touched && profileForm.controls['department'].invalid) {
+                  <small class="text-danger">Department is required.</small>
+                }
+              </div>
+
+              <!-- Age -->
+              <div class="col-md-3">
+                <label class="form-label">Age <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="age"
+                  min="17"
+                  max="60"
+                />
+                @if (profileForm.controls['age'].touched && profileForm.controls['age'].invalid) {
+                  <small class="text-danger">Age must be between 17 and 60.</small>
+                }
+              </div>
+
+              <!-- CGPA -->
+              <div class="col-md-3">
+                <label class="form-label">CGPA <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  formControlName="cgpa"
+                  min="0"
+                  max="10"
+                />
+                @if (profileForm.controls['cgpa'].touched && profileForm.controls['cgpa'].invalid) {
+                  <small class="text-danger">CGPA must be between 0 and 10.</small>
+                }
+              </div>
+            </div>
+
+            <div class="form-actions mt-4">
+              <button
+                type="button"
+                class="btn btn-secondary me-2"
+                (click)="cancelEditing()"
+                [disabled]="isSaving()"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="profileForm.invalid || isSaving()"
+              >
+                @if (isSaving()) {
+                  Saving Changes...
+                } @else {
+                  Save Changes
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Detailed Info Card -->
+      <div class="profile-card details-card">
+        <div class="card-heading">
+          <h4>Registration Details</h4>
+          <p>Account timestamp records and system metadata.</p>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-row">
+            <span class="label">Student ID</span>
+            <span class="value">#{{ profile()!.studentId }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Registration Date</span>
+            <span class="value">{{ profile()!.registeredAt | date: 'dd MMMM yyyy, hh:mm a' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Reviewed Date</span>
+            <span class="value">
+              {{ profile()!.reviewedAt ? (profile()!.reviewedAt | date: 'dd MMMM yyyy, hh:mm a') : 'Awaiting review' }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Account Status</span>
+            <span class="value">
+              {{ getStatusLabel(profile()!.status) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
