@@ -6,7 +6,7 @@ import { SaveCourseRequest } from '../course.models';
 
 
 @Component({
-  imports: [],
+  imports: [ReactiveFormsModule],
   selector: 'app-edit-courses',
   styleUrl: './edit-courses.css',
   templateUrl: './edit-courses.html',

@@ -90,6 +90,17 @@ export class CourseListComponent implements OnInit {
   }
 
   //delete course
- 
+  deleteCourse(id:number) : void{
+    this.courseService.deactivateCourse(id).subscribe({
+      next : (Response)=>{
+        console.log(`delete ${id} is sucessfully`);
+        alert(`deleted sucessfully`);
+      },
+      error :(err)=>{
+        console.log(`Error : ${err}`);
+        alert(`deletion failed`);
+      }
+    });
+  }
   
 }
