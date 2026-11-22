@@ -16,7 +16,6 @@ import { SaveCourseRequest } from '../course.models';
 })
 export class CourseListComponent implements OnInit {
   private courseService = inject(CourseService);
-  private EditCourseService = inject(EditCourses)
 
   // Signals
   courses = signal<CourseResponse[]>([]);

@@ -490,3 +490,57 @@
     padding: 18px;
   }
 }
+
+/* Common button styling */
+.btn-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+/* Edit button */
+.theme-info {
+  background-color: #e8f1ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.theme-info:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+
+/* Delete button */
+.theme-danger {
+  background-color: #feecec;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.theme-danger:hover {
+  background-color: #dc2626;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2);
+}
+
+/* Click effect */
+.btn-solid:active {
+  transform: scale(0.96);
+}
+
+/* Keyboard accessibility */
+.btn-solid:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
