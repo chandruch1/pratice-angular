@@ -1,13 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { EnrollmentService } from '../../enrollment.service';
-import { EnrollmentResponse } from '../../enrollment.models';
+import { EnrollmentFilter, EnrollmentResponse } from '../../enrollment.models';
 
 @Component({
   selector: 'app-enrollment-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './enrollment-list.html',
   styleUrl: './enrollment-list.css',
 })
@@ -24,6 +25,11 @@ export class EnrollmentListComponent implements OnInit {
   totalRecords = signal(0);
   totalPages = signal(0);
 
+  filters: EnrollmentFilter = {
+    search: '',
+    status: null,
+  };
+
   ngOnInit(): void {
     this.loadEnrollments();
   }
@@ -32,7 +38,7 @@ export class EnrollmentListComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.enrollmentService.getEnrollments(this.pageNumber(), this.pageSize()).subscribe({
+    this.enrollmentService.getEnrollments(this.pageNumber(), this.pageSize(), this.filters).subscribe({
       next: (response) => {
         this.enrollments.set(response.items);
         this.totalRecords.set(response.totalRecords);
@@ -46,6 +52,20 @@ export class EnrollmentListComponent implements OnInit {
         this.isLoading.set(false);
       },
     });
+  }
+
+  applyFilters(): void {
+    this.pageNumber.set(1);
+    this.loadEnrollments();
+  }
+
+  clearFilters(): void {
+    this.filters = {
+      search: '',
+      status: null,
+    };
+    this.pageNumber.set(1);
+    this.loadEnrollments();
   }
 
   nextPage(): void {

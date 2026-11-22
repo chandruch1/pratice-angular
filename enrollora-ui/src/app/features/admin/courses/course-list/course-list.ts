@@ -90,10 +90,14 @@ export class CourseListComponent implements OnInit {
 
   //delete course
   deleteCourse(id:number) : void{
+    if (!confirm('Are you sure you want to deactivate this course?')) {
+      return;
+    }
     this.courseService.deactivateCourse(id).subscribe({
       next : (Response)=>{
         console.log(`delete ${id} is sucessfully`);
-        alert(`deleted sucessfully`);
+        alert(`Course deactivated successfully`);
+        this.loadCourses();
       },
       error :(err)=>{
         console.log(`Error : ${err}`);

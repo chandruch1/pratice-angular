@@ -52,6 +52,14 @@ export class StudentService {
     return this.http.get<StudentResponse>(`${this.apiUrl}/${id}`);
   }
 
+  getMe(): Observable<StudentResponse> {
+    return this.http.get<StudentResponse>(`${this.apiUrl}/me`);
+  }
+
+  updateMe(studentData: UpdateStudentRequest): Observable<StudentResponse> {
+    return this.http.put<StudentResponse>(`${this.apiUrl}/me`, studentData);
+  }
+
   approveStudent(id: number): Observable<ApiMessage> {
     return this.http.put<ApiMessage>(`${this.apiUrl}/${id}/approve`, {});
   }

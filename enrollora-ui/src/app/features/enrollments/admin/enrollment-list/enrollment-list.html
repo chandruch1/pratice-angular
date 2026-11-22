@@ -22,6 +22,34 @@
     </div>
   </div>
 
+  <!-- Filter Bar -->
+  <div class="filter-card mb-4" style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 18px rgba(40, 20, 70, 0.06);">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label" style="font-size: 12px; font-weight: 700; color: #4b3e64;">Search Student</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search by student name or email..."
+          [(ngModel)]="filters.search"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" style="font-size: 12px; font-weight: 700; color: #4b3e64;">Status</label>
+        <select class="form-select" [(ngModel)]="filters.status" (change)="applyFilters()">
+          <option [ngValue]="null">All Statuses</option>
+          <option [ngValue]="0">Active</option>
+          <option [ngValue]="1">Cancelled</option>
+        </select>
+      </div>
+      <div class="col-md-4 d-flex gap-2">
+        <button class="btn btn-primary" (click)="applyFilters()">Apply</button>
+        <button class="btn btn-outline-secondary" (click)="clearFilters()">Reset</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading -->
   @if (isLoading()) {
     <div class="state-message">
@@ -85,10 +113,10 @@
               <td>
                 <span
                   class="status-badge"
-                  [class.active]="enrollment.status === 1"
-                  [class.inactive]="enrollment.status !== 1"
+                  [class.active]="enrollment.status === 0"
+                  [class.inactive]="enrollment.status !== 0"
                 >
-                  {{ enrollment.status === 1 ? 'Active' : 'Cancelled' }}
+                  {{ enrollment.status === 0 ? 'Active' : 'Cancelled' }}
                 </span>
               </td>
             </tr>

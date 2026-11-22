@@ -2,85 +2,280 @@
   <div class="page-header">
     <div>
       <span class="eyebrow">MY LEARNING</span>
-      <h1>My Enrollments</h1>
-      <p>View courses you are currently enrolled in.</p>
+      <h1>My Enrollments & Cancellations</h1>
+      <p>View courses you are currently enrolled in and track your cancellation requests.</p>
     </div>
   </div>
 
-  @if (isLoading()) {
-    <div class="state-card">
-      <div class="loader"></div>
-      <p>Loading your enrollments...</p>
-    </div>
-  } @else if (errorMessage()) {
-    <div class="state-card error-state">
-      <span>⚠</span>
-      <h3>Could not load enrollments</h3>
-      <p>{{ errorMessage() }}</p>
-      <button class="retry-btn" (click)="loadEnrollments()">Try Again</button>
-    </div>
-  } @else if (enrollments().length === 0) {
-    <div class="state-card">
-      <span class="empty-icon">🎓</span>
-      <h3>No enrollments yet</h3>
-      <p>Browse available courses and enroll to get started.</p>
-    </div>
-  } @else {
-    <div class="table-card">
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Course</th>
-              <th>Enrollment Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (enrollment of enrollments(); track enrollment.enrollmentId) {
-              <tr>
-                <td>
-                  <div class="course-info">
-                    <div class="course-avatar">
-                      {{ enrollment.courseName.charAt(0).toUpperCase() }}
-                    </div>
-                    <div>
-                      <strong>{{ enrollment.courseName }}</strong>
-                      <small>Enrollment #{{ enrollment.enrollmentId }}</small>
-                    </div>
-                  </div>
-                </td>
-                <td>{{ enrollment.enrolledAt | date: 'dd MMM yyyy' }}</td>
-                <td>
-                  <span
-                    class="status-badge"
-                    [class.active]="enrollment.status === 1"
-                    [class.cancelled]="enrollment.status !== 1"
-                  >
-                    {{ statusLabel(enrollment.status) }}
-                  </span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+  <!-- Tab Navigation -->
+  <div class="tab-nav-bar">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'enrollments'"
+      (click)="setTab('enrollments')"
+    >
+      🎓 Enrolled Courses ({{ totalRecords() }})
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'cancellations'"
+      (click)="setTab('cancellations')"
+    >
+      ↻ Cancellation Requests ({{ cancellationTotalRecords() }})
+    </button>
+  </div>
 
-      <div class="pagination">
-        <span>
-          Showing {{ enrollments().length }} of {{ totalRecords() }} enrollments
-        </span>
-        <div>
-          <button (click)="previousPage()" [disabled]="pageNumber() === 1">Previous</button>
-          <span class="current-page">{{ pageNumber() }} / {{ totalPages() }}</span>
-          <button
-            (click)="nextPage()"
-            [disabled]="pageNumber() >= totalPages()"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+  <!-- Feedback Alerts -->
+  @if (successMessage()) {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <span>✓ {{ successMessage() }}</span>
+      <button type="button" class="btn-close" (click)="successMessage.set('')"></button>
     </div>
   }
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span>⚠️ {{ errorMessage() }}</span>
+      <button type="button" class="btn-close" (click)="errorMessage.set('')"></button>
+    </div>
+  }
+
+  <!-- TAB 1: ENROLLMENTS -->
+  @if (activeTab() === 'enrollments') {
+    @if (isLoading()) {
+      <div class="state-card">
+        <div class="loader"></div>
+        <p>Loading your enrollments...</p>
+      </div>
+    } @else if (enrollments().length === 0) {
+      <div class="state-card">
+        <span class="empty-icon">🎓</span>
+        <h3>No enrollments yet</h3>
+        <p>Browse available courses and enroll to get started.</p>
+      </div>
+    } @else {
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Enrollment Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (enrollment of enrollments(); track enrollment.enrollmentId) {
+                <tr>
+                  <td>
+                    <div class="course-info">
+                      <div class="course-avatar">
+                        {{ enrollment.courseName.charAt(0).toUpperCase() }}
+                      </div>
+                      <div>
+                        <strong>{{ enrollment.courseName }}</strong>
+                        <small>Enrollment #{{ enrollment.enrollmentId }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ enrollment.enrolledAt | date: 'dd MMM yyyy' }}</td>
+                  <td>
+                    <span
+                      class="status-badge"
+                      [class.active]="enrollment.status === 0"
+                      [class.cancelled]="enrollment.status === 1"
+                    >
+                      {{ statusLabel(enrollment.status) }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (enrollment.status === 0) {
+                      <button
+                        class="btn-request-cancel"
+                        (click)="openCancelModal(enrollment)"
+                      >
+                        Request Cancellation
+                      </button>
+                    } @else {
+                      <span class="text-muted small">Course Cancelled</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <span>
+            Showing {{ enrollments().length }} of {{ totalRecords() }} enrollments
+          </span>
+          <div>
+            <button (click)="previousPage()" [disabled]="pageNumber() === 1">Previous</button>
+            <span class="current-page">{{ pageNumber() }} / {{ totalPages() }}</span>
+            <button
+              (click)="nextPage()"
+              [disabled]="pageNumber() >= totalPages()"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- TAB 2: CANCELLATION REQUESTS -->
+  @if (activeTab() === 'cancellations') {
+    @if (isCancellationsLoading()) {
+      <div class="state-card">
+        <div class="loader"></div>
+        <p>Loading your cancellation requests...</p>
+      </div>
+    } @else if (cancellationsError()) {
+      <div class="state-card error-state">
+        <span>⚠</span>
+        <h3>Could not load cancellation requests</h3>
+        <p>{{ cancellationsError() }}</p>
+        <button class="retry-btn" (click)="loadMyCancellations()">Try Again</button>
+      </div>
+    } @else if (cancellations().length === 0) {
+      <div class="state-card">
+        <span class="empty-icon">📭</span>
+        <h3>No cancellation requests found</h3>
+        <p>You have not submitted any course cancellation requests.</p>
+      </div>
+    } @else {
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Course</th>
+                <th>Reason</th>
+                <th>Requested Date</th>
+                <th>Status</th>
+                <th>Admin Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (req of cancellations(); track req.cancellationRequestId) {
+                <tr>
+                  <td><strong>#{{ req.cancellationRequestId }}</strong></td>
+                  <td>
+                    <strong>{{ req.courseName }}</strong>
+                    <br /><small class="text-muted">Enrollment #{{ req.enrollmentId }}</small>
+                  </td>
+                  <td class="reason-cell">
+                    <span class="reason-box">{{ req.reason }}</span>
+                  </td>
+                  <td>{{ req.requestedAt | date: 'dd MMM yyyy, hh:mm a' }}</td>
+                  <td>
+                    <span
+                      class="cancellation-badge"
+                      [class.pending]="req.status === CancellationStatus.Pending"
+                      [class.approved]="req.status === CancellationStatus.Approved"
+                      [class.rejected]="req.status === CancellationStatus.Rejected"
+                    >
+                      {{ getCancellationStatusLabel(req.status) }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (req.adminRemarks) {
+                      <span class="remarks-box">{{ req.adminRemarks }}</span>
+                    } @else {
+                      <span class="text-muted fst-italic">No remarks yet</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <span>
+            Showing {{ cancellations().length }} of {{ cancellationTotalRecords() }} requests
+          </span>
+          <div>
+            <button
+              (click)="previousCancellationPage()"
+              [disabled]="cancellationPageNumber() === 1"
+            >
+              Previous
+            </button>
+            <span class="current-page">
+              {{ cancellationPageNumber() }} / {{ cancellationTotalPages() }}
+            </span>
+            <button
+              (click)="nextCancellationPage()"
+              [disabled]="cancellationPageNumber() >= cancellationTotalPages()"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
 </div>
+
+<!-- Modal: Request Cancellation -->
+@if (selectedEnrollmentForCancel) {
+  <div class="modal-backdrop-custom">
+    <div class="modal-card">
+      <div class="modal-header-custom">
+        <div>
+          <span class="modal-eyebrow">ENROLLMENT CANCELLATION</span>
+          <h4>Request Course Cancellation</h4>
+        </div>
+        <button class="btn-close-modal" (click)="closeCancelModal()">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <div class="notice-box">
+          <p class="mb-1">
+            You are requesting to cancel your enrollment in
+            <strong>{{ selectedEnrollmentForCancel.courseName }}</strong>.
+          </p>
+          <small class="text-muted">
+            Once submitted, your request will be reviewed by an administrator.
+          </small>
+        </div>
+
+        <div class="form-group mt-3">
+          <label class="form-label">
+            Reason for Cancellation <span class="text-danger">*</span>
+          </label>
+          <textarea
+            class="form-control"
+            rows="4"
+            placeholder="Please explain why you want to cancel this course enrollment (e.g., schedule conflict, personal reasons)..."
+            [(ngModel)]="cancellationReason"
+            maxlength="1000"
+          ></textarea>
+          <small class="text-muted float-end mt-1">
+            {{ cancellationReason.length }} / 1000 characters
+          </small>
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button class="btn btn-secondary" (click)="closeCancelModal()">Cancel</button>
+        <button
+          class="btn btn-danger"
+          [disabled]="isSubmittingCancel || !cancellationReason.trim()"
+          (click)="submitCancellation()"
+        >
+          @if (isSubmittingCancel) {
+            Submitting...
+          } @else {
+            Submit Cancellation Request
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

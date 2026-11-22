@@ -47,6 +47,13 @@ export const routes: Routes = [
             (m) => m.EnrollmentListComponent,
           ),
       },
+      {
+        path: 'cancellation-requests',
+        loadComponent: () =>
+          import('./features/admin/cancellation-requests/cancellation-requests').then(
+            (m) => m.CancellationRequestsComponent,
+          ),
+      },
     ],
   },
   {
@@ -74,6 +81,11 @@ export const routes: Routes = [
           import('./features/enrollments/student/my-enrollments/my-enrollments').then(
             (m) => m.MyEnrollments,
           ),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/student/profile/profile').then((m) => m.StudentProfileComponent),
       },
       {
         path: '',
