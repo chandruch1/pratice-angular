@@ -1,0 +1,384 @@
+<div class="cancellation-page">
+  <!-- Page Header -->
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">ENROLLMENT LIFECYCLE</span>
+      <h2>Cancellation Requests</h2>
+      <p>Review, approve, or reject student course cancellation requests with token controls.</p>
+    </div>
+
+    <div class="header-actions">
+      <!-- Cancellation Token Status Pill & Abort Controller Button -->
+      @if (cancellationTokenActive()) {
+        <button class="btn-token-abort" (click)="abortInFlightRequest()" title="Abort in-flight request using cancellation token">
+          <span class="pulse-dot"></span>
+          Abort Request (Token Active)
+        </button>
+      } @else {
+        <span class="token-status-pill">
+          <span class="token-icon">⚡</span>
+          Cancellation Token: Ready
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- Feedback Alerts -->
+  @if (successMessage()) {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <span>✓ {{ successMessage() }}</span>
+      <button type="button" class="btn-close" (click)="successMessage.set('')"></button>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span>⚠️ {{ errorMessage() }}</span>
+      <button type="button" class="btn-close" (click)="errorMessage.set('')"></button>
+    </div>
+  }
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card purple">
+      <div class="summary-icon">📋</div>
+      <div>
+        <span>Total Requests</span>
+        <h2>{{ totalRecords() }}</h2>
+      </div>
+    </div>
+
+    <div class="summary-card orange">
+      <div class="summary-icon">⏳</div>
+      <div>
+        <span>Pending Review</span>
+        <h2>{{ pendingCount() }}</h2>
+      </div>
+    </div>
+
+    <div class="summary-card green">
+      <div class="summary-icon">✓</div>
+      <div>
+        <span>Approved</span>
+        <h2>{{ approvedCount() }}</h2>
+      </div>
+    </div>
+
+    <div class="summary-card red">
+      <div class="summary-icon">✕</div>
+      <div>
+        <span>Rejected</span>
+        <h2>{{ rejectedCount() }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-header">
+      <div>
+        <h5>Filter Requests</h5>
+        <p>Search by student or filter by status and date range</p>
+      </div>
+      <span class="filter-icon">🔍</span>
+    </div>
+
+    <div class="row g-3">
+      <!-- Search -->
+      <div class="col-lg-4 col-md-6">
+        <label class="form-label">Search Student</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search by student name or email"
+          [(ngModel)]="filters.search"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <!-- Status Filter -->
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">Status</label>
+        <select class="form-select" [(ngModel)]="filters.status" (change)="applyFilters()">
+          <option [ngValue]="null">All Statuses</option>
+          <option [ngValue]="Status.Pending">Pending</option>
+          <option [ngValue]="Status.Approved">Approved</option>
+          <option [ngValue]="Status.Rejected">Rejected</option>
+        </select>
+      </div>
+
+      <!-- From Date -->
+      <div class="col-lg-2 col-md-6">
+        <label class="form-label">From Date</label>
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="filters.fromDate"
+        />
+      </div>
+
+      <!-- To Date -->
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">To Date</label>
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="filters.toDate"
+        />
+      </div>
+    </div>
+
+    <div class="filter-footer">
+      <button class="btn btn-apply" (click)="applyFilters()">Apply Filters</button>
+      <button class="btn btn-reset" (click)="clearFilters()">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+    <div class="table-header">
+      <div>
+        <h3>All Cancellation Requests</h3>
+        <p>List of requests submitted by students to cancel active course enrollments.</p>
+      </div>
+      <span class="record-count">{{ totalRecords() }} requests</span>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="state-message">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p>Fetching cancellation requests...</p>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @else if (requests().length === 0) {
+      <div class="state-message empty-state">
+        <span class="empty-icon">📭</span>
+        <h3>No cancellation requests found</h3>
+        <p>There are no cancellation requests matching your criteria.</p>
+      </div>
+    }
+
+    <!-- Table -->
+    @else {
+      <div class="table-responsive">
+        <table class="requests-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>STUDENT</th>
+              <th>COURSE</th>
+              <th>REASON</th>
+              <th>REQUESTED ON</th>
+              <th>STATUS</th>
+              <th>ADMIN REMARKS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (req of requests(); track req.cancellationRequestId) {
+              <tr>
+                <td>
+                  <span class="request-id">#{{ req.cancellationRequestId }}</span>
+                </td>
+
+                <td>
+                  <div class="student-info">
+                    <div class="student-avatar">
+                      {{ req.studentName.charAt(0).toUpperCase() }}
+                    </div>
+                    <div>
+                      <strong>{{ req.studentName }}</strong>
+                      <small>{{ req.studentEmail }}</small>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="course-meta">
+                    <strong>{{ req.courseName }}</strong>
+                    <small>Enrollment #{{ req.enrollmentId }}</small>
+                  </div>
+                </td>
+
+                <td class="reason-cell">
+                  <div class="reason-text" [title]="req.reason">
+                    {{ req.reason }}
+                  </div>
+                </td>
+
+                <td>
+                  <span class="date-text">
+                    {{ req.requestedAt | date: 'dd MMM yyyy, hh:mm a' }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.pending]="req.status === Status.Pending"
+                    [class.approved]="req.status === Status.Approved"
+                    [class.rejected]="req.status === Status.Rejected"
+                  >
+                    <span class="status-dot"></span>
+                    {{ getStatusLabel(req.status) }}
+                  </span>
+                </td>
+
+                <td>
+                  @if (req.adminRemarks) {
+                    <span class="remarks-text" [title]="req.adminRemarks">
+                      {{ req.adminRemarks }}
+                    </span>
+                  } @else {
+                    <span class="text-muted fst-italic">None</span>
+                  }
+                </td>
+
+                <td>
+                  <div class="action-buttons">
+                    @if (req.status === Status.Pending) {
+                      <button
+                        class="btn-action btn-approve"
+                        title="Approve cancellation"
+                        (click)="openReviewModal(req, 'approve')"
+                      >
+                        ✓ Approve
+                      </button>
+                      <button
+                        class="btn-action btn-reject"
+                        title="Reject cancellation"
+                        (click)="openReviewModal(req, 'reject')"
+                      >
+                        ✕ Reject
+                      </button>
+                    } @else {
+                      <span class="reviewed-stamp">
+                        Reviewed {{ req.reviewedAt | date: 'dd/MM' }}
+                      </span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-container">
+        <div class="pagination-info">
+          Showing {{ requests().length }} of {{ totalRecords() }} requests
+        </div>
+
+        <div class="page-size-selector">
+          <label for="cancellationPageSize">Per page:</label>
+          <select
+            #pSize
+            id="cancellationPageSize"
+            class="form-select form-select-sm"
+            [value]="pageSize()"
+            (change)="changePageSize(pSize.value)"
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+
+        <div class="pagination-controls">
+          <button
+            class="btn-page"
+            [disabled]="pageNumber() === 1 || isLoading()"
+            (click)="previousPage()"
+          >
+            ← Previous
+          </button>
+
+          <span class="page-indicator">
+            Page {{ pageNumber() }} of {{ totalPages() }}
+          </span>
+
+          <button
+            class="btn-page"
+            [disabled]="pageNumber() >= totalPages() || isLoading()"
+            (click)="nextPage()"
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Review Modal -->
+@if (selectedRequest) {
+  <div class="modal-backdrop-custom">
+    <div class="modal-card">
+      <div class="modal-header-custom" [class.approve-head]="reviewAction === 'approve'" [class.reject-head]="reviewAction === 'reject'">
+        <div>
+          <span class="modal-eyebrow">{{ reviewAction | uppercase }} CANCELLATION REQUEST</span>
+          <h4>Request #{{ selectedRequest.cancellationRequestId }}</h4>
+        </div>
+        <button class="btn-close-modal" (click)="closeReviewModal()">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <div class="request-summary-box">
+          <div class="summary-row">
+            <span>Student:</span>
+            <strong>{{ selectedRequest.studentName }} ({{ selectedRequest.studentEmail }})</strong>
+          </div>
+          <div class="summary-row">
+            <span>Course:</span>
+            <strong>{{ selectedRequest.courseName }}</strong>
+          </div>
+          <div class="summary-row">
+            <span>Reason:</span>
+            <p class="mb-0 text-dark">{{ selectedRequest.reason }}</p>
+          </div>
+        </div>
+
+        <div class="form-group mt-3">
+          <label class="form-label">
+            Admin Remarks
+            @if (reviewAction === 'reject') {
+              <span class="text-danger">*</span>
+            } @else {
+              <small class="text-muted">(Optional)</small>
+            }
+          </label>
+          <textarea
+            class="form-control"
+            rows="3"
+            placeholder="Enter review remarks or reason for decision..."
+            [(ngModel)]="reviewRemarks"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button class="btn btn-secondary" (click)="closeReviewModal()">Cancel</button>
+        <button
+          class="btn"
+          [class.btn-success]="reviewAction === 'approve'"
+          [class.btn-danger]="reviewAction === 'reject'"
+          [disabled]="isReviewing"
+          (click)="submitReview()"
+        >
+          @if (isReviewing) {
+            Processing...
+          } @else {
+            Confirm {{ reviewAction | titlecase }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
