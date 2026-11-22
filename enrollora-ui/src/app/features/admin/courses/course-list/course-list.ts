@@ -3,16 +3,20 @@ import { CommonModule } from '@angular/common';
 import { CourseService } from '../course.service';
 import { CourseResponse } from '../course.models';
 import { AddCourse } from '../add-course/add-course';
+import { EditCourses } from '../edit-courses/edit-courses';
+import { SaveCourseRequest } from '../course.models';
+
 
 @Component({
   selector: 'app-course-list',
   standalone: true,
-  imports: [CommonModule, AddCourse],
+  imports: [CommonModule, AddCourse,EditCourses],
   templateUrl: './course-list.html',
   styleUrl: './course-list.css',
 })
 export class CourseListComponent implements OnInit {
   private courseService = inject(CourseService);
+  private EditCourseService = inject(EditCourses)
 
   // Signals
   courses = signal<CourseResponse[]>([]);
@@ -25,6 +29,18 @@ export class CourseListComponent implements OnInit {
 
   totalRecords = signal(0);
   totalPages = signal(0);
+
+  selectedCourse = signal<SaveCourseRequest | null>(null);
+
+  selectedCourseId = signal<number | null>(null);
+
+  openEditCourse(course: SaveCourseRequest, courseId: number): void {
+
+    this.selectedCourse.set(course);
+
+    this.selectedCourseId.set(courseId);
+
+  }
 
   ngOnInit(): void {
     this.loadCourses();
@@ -72,4 +88,8 @@ export class CourseListComponent implements OnInit {
       this.loadCourses();
     }
   }
+
+  //delete course
+ 
+  
 }

@@ -15,7 +15,7 @@
     <!-- Add Course Popup Component -->
     <app-add-course></app-add-course>
 
-  </div> 
+  </div>
 
   <!-- Summary Cards -->
   <div class="summary-grid">
@@ -101,6 +101,7 @@
             <th>ENROLLMENT</th>
             <th>AVAILABLE SEATS</th>
             <th>STATUS</th>
+            <th>EDIT COURSES</th>
           </tr>
         </thead>
 
@@ -153,10 +154,28 @@
                 {{ course.isActive ? 'Active' : 'Inactive' }}
               </span>
             </td>
-          </tr>
-          }
+
+
+            <td>
+              <button type="button" class="btn-solid theme-info" data-bs-toggle="modal"
+                data-bs-target="#editCourseModal" (click)="openEditCourse(course, course.courseId)">
+
+                <i class="bi bi-pencil-square"></i>
+                Edit
+
+              </button>
+
+              <button type="button" class="btn-solid theme-danger" (click)="deleteCourse(course.courseId)">
+                <i class="bi bi-trash"></i>
+                Delete
+              </button>
+            </td>
+
+            }
         </tbody>
       </table>
+      <app-edit-courses [course]="selectedCourse()" [courseId]="selectedCourseId()" (courseUpdated)="loadCourses()">
+      </app-edit-courses>
     </div>
     }
 
